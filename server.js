@@ -26,22 +26,60 @@ connection.connect((err) => {
     console.log('Connected to MySQL');
 
     // Create the 'restaurants' table if it doesn't exist
-    const createTableQuery = `
-        CREATE TABLE IF NOT EXISTS restaurants (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            name VARCHAR(255) NOT NULL,
-            address VARCHAR(255) NOT NULL,
-            contact VARCHAR(255) NOT NULL
-        )
-    `;
+    // const createTableQuery = `
+    //     CREATE TABLE IF NOT EXISTS restaurants (
+    //         id INT AUTO_INCREMENT PRIMARY KEY,
+    //         name VARCHAR(255) NOT NULL,
+    //         address VARCHAR(255) NOT NULL,
+    //         contact VARCHAR(255) NOT NULL
+    //     )
+    // `;
 
-    connection.query(createTableQuery, (createTableErr) => {
-        if (createTableErr) {
-            console.error('Error creating table:', createTableErr);
-            throw createTableErr;
-        }
-        console.log('Table created or already exists');
-    });
+    // connection.query(createTableQuery, (createTableErr) => {
+    //     if (createTableErr) {
+    //         console.error('Error creating table:', createTableErr);
+    //         throw createTableErr;
+    //     }
+    //     console.log('Table created or already exists');
+    // });
+
+    // Create a new table "dishes" with a price column
+//     const createTableQueryDishes = `
+//  CREATE TABLE IF NOT EXISTS dishes (
+//      id INT AUTO_INCREMENT PRIMARY KEY,
+//      name VARCHAR(255) NOT NULL,
+//      cuisine VARCHAR(50) NOT NULL,
+//      description TEXT,
+//      price DECIMAL(10, 2) NOT NULL
+//  )
+// `;
+//     connection.query(createTableQueryDishes, (createTableErr) => {
+//         if (createTableErr) {
+//             console.error('Error creating table:', createTableErr);
+//             throw createTableErr;
+//         }
+//         console.log('Table "dishes" created or already exists');
+
+        // Insert dummy data for Indian dishes with prices
+//         const insertDataQuery = `
+//      INSERT INTO dishes (name, cuisine, description, price)
+//      VALUES 
+//          ('Butter Chicken', 'Indian', 'A rich and creamy chicken curry.', 16.99),
+//          ('Biryani', 'Indian', 'A flavorful and aromatic rice dish with spices and meat.', 19.99),
+//          ('Paneer Tikka', 'Indian', 'Grilled marinated paneer cubes with spices.', 21.99),
+//          ('Masala Dosa', 'Indian', 'A thin and crispy rice crepe filled with spiced potatoes.', 13.99),
+//          ('Rogan Josh', 'Indian', 'A flavorful and aromatic lamb curry.', 19.99)
+//  `;
+
+        // connection.query(insertDataQuery, (insertDataErr) => {
+        //     if (insertDataErr) {
+        //         console.error('Error inserting dummy data:', insertDataErr);
+        //         throw insertDataErr;
+        //     }
+        //     console.log('Dummy data inserted into the "dishes" table');
+        // });
+    // });
+
 });
 
 // Routes
@@ -65,7 +103,7 @@ router.post('/restaurants', (req, res) => {
 
 //get all restaurants
 router.get('/restaurants', (req, res) => {
-    const { search, page = 1, pageSize = 10 } = req.query;
+    const { search, page = 1, pageSize = 5 } = req.query;
     let sql = 'SELECT COUNT(*) as total FROM restaurants';
 
     const searchConditions = [];
@@ -115,7 +153,6 @@ router.get('/restaurants', (req, res) => {
     });
 });
 
-
 // New route to update a restaurant
 router.put('/restaurants/:id', (req, res) => {
     const { id } = req.params;
@@ -140,6 +177,57 @@ router.delete('/restaurants/:id', (req, res) => {
     connection.query(sql, values, (error) => {
         if (error) throw error;
         res.json({ message: 'Restaurant deleted successfully' });
+    });
+});
+// New route to update a restaurant
+router.put('/dishes/:id', (req, res) => {
+    const { id } = req.params;
+    const { name, cuisine, description, price } = req.body;
+
+    const sql = 'UPDATE dishes SET name = ?, cuisine = ?, description = ?, price = ? WHERE id = ?';
+    const values = [name, cuisine, description, price, id];
+
+    connection.query(sql, values, (error) => {
+        if (error) throw error;
+        res.json({ message: 'Dishes updated successfully' });
+    });
+});
+//delete dishes
+// New route to delete a restaurant
+router.delete('/dish/:id', (req, res) => {
+    const { id } = req.params;
+
+    const sql = 'DELETE FROM dishes WHERE id = ?';
+    const values = [id];
+
+    connection.query(sql, values, (error) => {
+        if (error) throw error;
+        res.json({ message: 'Dish deleted successfully' });
+    });
+});
+//added dishes
+router.post('/dishes', (req, res) => {
+    const { name, cuisine, description, price } = req.body;
+
+    const sql = 'INSERT INTO dishes (name, cuisine, description, price) VALUES (?, ?, ?, ?)';
+    const values = [name, cuisine, description, price];
+
+    connection.query(sql, values, (error, results) => {
+        if (error) throw error;
+        res.json({ message: 'Dishes added successfully', id: results.insertId });
+    });
+});
+//get all restaurants
+router.get('/dishesList', (req, res) => {
+    const sql = 'SELECT * FROM dishes';  
+    connection.query(sql, (error, results) => {
+        if (error) {
+            console.error('Error fetching records:', error);
+            return res.status(500).json({ error: 'Internal Server Error' });
+        }
+        res.json({
+            results,
+        });
     });
 });
 
